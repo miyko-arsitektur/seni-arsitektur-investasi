@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arsitektur sebagai Aset Investasi: Dasbor Interaktif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: Aplikasi ini menggunakan struktur naratif tematik yang dibagi menjadi beberapa bagian logis: 'Mengapa' (Prinsip Inti), 'Bagaimana' (Pendorong Nilai), 'Bukti' (Studi Kasus & Data), dan 'Kalkulator' (Simulasi ROI). Struktur ini dipilih untuk memandu pengguna dari konsep dasar ke bukti nyata dan aplikasi praktis, membuatnya lebih mudah dicerna daripada struktur laporan linier. Navigasi sticky memungkinkan akses cepat ke setiap bagian, sementara elemen interaktif seperti tab dan kartu yang dapat diklik mendorong eksplorasi aktif. Tujuannya adalah untuk mengubah laporan padat menjadi perjalanan penemuan yang menarik. -->
+    <!-- Visualization & Content Choices: 
+        - [Prinsip Ekonomi -> Tujuan: Menginformasikan -> Metode: Kartu interaktif HTML/CSS -> Interaksi: Klik untuk menampilkan detail] untuk menyederhanakan konsep teoretis.
+        - [Pendorong Nilai -> Tujuan: Mengorganisir -> Metode: Sistem tab HTML/JS -> Interaksi: Klik tab untuk beralih konten] untuk menyajikan informasi berlapis tanpa membanjiri pengguna.
+        - [Kisaran Cap Rate -> Tujuan: Membandingkan -> Metode: Grafik batang horizontal Chart.js -> Interaksi: Arahkan kursor untuk tooltip] untuk perbandingan visual yang jelas dari potensi pengembalian.
+        - [Analisis LCC -> Tujuan: Menunjukkan proporsi -> Metode: Grafik donat Chart.js -> Interaksi: Arahkan kursor untuk detail] untuk menyoroti di mana biaya jangka panjang berada.
+        - [Kalkulator ROI -> Tujuan: Mensimulasikan -> Metode: Input & output HTML/JS -> Interaksi: Pengguna memasukkan nilai untuk melihat dampak desain] untuk memberikan pengalaman belajar yang dipersonalisasi dan nyata.
+        - [Studi Kasus -> Tujuan: Memberi contoh -> Metode: Kartu HTML/CSS -> Interaksi: Tidak ada, fokus pada penyajian data kunci secara ringkas] untuk sorotan cepat.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+            color: #1e293b; /* slate-800 */
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #0d9488; /* teal-600 */
+            border-bottom-color: #0d9488;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-teal-700">Arsitektur & Investasi</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#mengapa" class="nav-link px-3 py-2 rounded-md text-sm font-semibold">Mengapa</a>
+                        <a href="#bagaimana" class="nav-link px-3 py-2 rounded-md text-sm font-semibold">Bagaimana</a>
+                        <a href="#bukti" class="nav-link px-3 py-2 rounded-md text-sm font-semibold">Bukti</a>
+                        <a href="#kalkulator" class="nav-link px-3 py-2 rounded-md text-sm font-semibold">Kalkulator</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5">
+                        <option value="#mengapa">Mengapa</option>
+                        <option value="#bagaimana">Bagaimana</option>
+                        <option value="#bukti">Bukti</option>
+                        <option value="#kalkulator">Kalkulator</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section id="hero" class="text-center mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 mb-4">Ubah Properti Menjadi Aset Bernilai Tinggi.</h2>
+            <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-600">Jelajahi bagaimana desain arsitektur yang cerdas bukan sekadar biaya, melainkan investasi strategis yang meningkatkan nilai properti Anda secara signifikan. Gulir ke bawah untuk menemukan data, prinsip, dan studi kasusnya.</p>
+        </section>
+
+        <section id="mengapa" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Mengapa Desain Penting? Prinsip Ekonomi dalam Properti</h3>
+                <p class="mt-2 text-md md:text-lg text-slate-600 max-w-2xl mx-auto">Nilai sebuah properti tidak muncul begitu saja. Ada prinsip-prinsip ekonomi mendasar yang menentukan nilainya, dan desain arsitektur memainkan peran kunci di setiap prinsip tersebut.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="card p-6 text-center">
+                    <div class="text-3xl mb-3">🏠</div>
+                    <h4 class="font-bold text-lg mb-2">Penggunaan Tertinggi & Terbaik (HBU)</h4>
+                    <p class="text-sm text-slate-600">Nilai properti maksimal saat desainnya selaras dengan potensi terbaik lokasinya. Desain yang tepat untuk lingkungan yang tepat adalah kunci keuntungan.</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <div class="text-3xl mb-3">🤝</div>
+                    <h4 class="font-bold text-lg mb-2">Kesesuaian (Conformity)</h4>
+                    <p class="text-sm text-slate-600">Properti bernilai tinggi saat desainnya harmonis dengan lingkungan sekitar. Desain yang "cocok" akan meningkatkan nilai, sementara yang terlalu kontras bisa menurunkannya.</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <div class="text-3xl mb-3">➕</div>
+                    <h4 class="font-bold text-lg mb-2">Kontribusi (Contribution)</h4>
+                    <p class="text-sm text-slate-600">Setiap elemen desain harus menambah nilai total properti. Nilai sebuah fitur diukur dari seberapa besar ia meningkatkan nilai jual, bukan hanya biayanya.</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <div class="text-3xl mb-3">📈</div>
+                    <h4 class="font-bold text-lg mb-2">Antisipasi (Anticipation)</h4>
+                    <p class="text-sm text-slate-600">Nilai properti hari ini ditentukan oleh ekspektasi keuntungan di masa depan. Desain yang "future-proof" (hemat energi, fleksibel) memiliki nilai investasi lebih tinggi.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="bagaimana" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Bagaimana Desain Meningkatkan Nilai? Pendorong Utama</h3>
+                <p class="mt-2 text-md md:text-lg text-slate-600 max-w-2xl mx-auto">Desain arsitektur yang unggul berfokus pada empat area kunci yang secara langsung mendorong peningkatan nilai investasi properti. Klik setiap tab untuk melihat detailnya.</p>
+            </div>
+            <div>
+                <div class="mb-4 flex flex-wrap justify-center gap-2">
+                    <button class="tab-btn active px-4 py-2 text-sm font-semibold rounded-full" data-tab="tab1">Perencanaan & Fungsi</button>
+                    <button class="tab-btn px-4 py-2 text-sm font-semibold rounded-full" data-tab="tab2">Kualitas & Material</button>
+                    <button class="tab-btn px-4 py-2 text-sm font-semibold rounded-full" data-tab="tab3">Estetika & Daya Tarik</button>
+                    <button class="tab-btn px-4 py-2 text-sm font-semibold rounded-full" data-tab="tab4">Efisiensi & Keberlanjutan</button>
+                </div>
+                <div id="tab-content" class="card p-6 md:p-8">
+                    <div id="tab1" class="tab-pane active">
+                        <h4 class="font-bold text-xl mb-3">Perencanaan Efisien & Fungsional</h4>
+                        <p class="text-slate-600">Ini adalah fondasi dari nilai. Desain yang baik memaksimalkan setiap meter persegi, menciptakan tata letak yang logis dan fungsional yang meningkatkan kenyamanan. Perencanaan matang oleh arsitek juga secara signifikan mengurangi risiko revisi mahal selama konstruksi, menjaga anggaran dan jadwal proyek tetap terkendali. Ini adalah investasi dalam prediktabilitas dan efisiensi.</p>
+                    </div>
+                    <div id="tab2" class="tab-pane hidden">
+                        <h4 class="font-bold text-xl mb-3">Kualitas Bangunan & Material</h4>
+                        <p class="text-slate-600">Investasi pada material berkualitas tinggi dan konstruksi yang kokoh akan terbayar dalam jangka panjang. Material yang tahan lama mengurangi biaya perawatan dan perbaikan, sementara konstruksi yang solid memastikan daya tahan aset. Properti yang dibangun dengan baik tidak hanya lebih aman dan nyaman tetapi juga memiliki nilai jual kembali yang jauh lebih tinggi di pasar sekunder.</p>
+                    </div>
+                    <div id="tab3" class="tab-pane hidden">
+                        <h4 class="font-bold text-xl mb-3">Estetika & Daya Tarik Visual</h4>
+                        <p class="text-slate-600">Di pasar yang kompetitif, daya tarik visual adalah pembeda utama. Arsitektur yang unik, berkarakter, dan indah secara visual dapat membuat properti menonjol, menarik lebih banyak calon pembeli, dan memungkinkan penetapan harga premium. Pemanfaatan pencahayaan alami dan pemandangan yang indah juga menciptakan "nilai rasa" yang sulit diukur namun sangat memengaruhi keputusan pembelian.</p>
+                    </div>
+                    <div id="tab4" class="tab-pane hidden">
+                        <h4 class="font-bold text-xl mb-3">Efisiensi Energi & Keberlanjutan</h4>
+                        <p class="text-slate-600">Bangunan hijau (*Green Building*) bukan lagi tren, melainkan standar baru. Desain yang hemat energi (melalui desain pasif, isolasi, dan teknologi efisien) secara langsung mengurangi biaya operasional bulanan. Sertifikasi hijau tidak hanya meningkatkan nilai jual properti tetapi juga dapat memberikan insentif pajak dan meningkatkan reputasi, menjadikannya investasi yang cerdas secara finansial dan lingkungan.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="bukti" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Bukti Nyata: Data & Studi Kasus</h3>
+                <p class="mt-2 text-md md:text-lg text-slate-600 max-w-2xl mx-auto">Teori dan prinsip tidak akan berarti tanpa bukti. Lihat bagaimana data dan studi kasus nyata di Indonesia menunjukkan dampak finansial dari desain arsitektur yang superior.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+                <div class="card p-6 md:p-8">
+                    <h4 class="font-bold text-xl mb-4 text-center">Potensi Imbal Hasil (Cap Rate) Berdasarkan Jenis Properti</h4>
+                    <p class="text-sm text-center text-slate-500 mb-4">Properti yang dirancang untuk tujuan komersial atau sewa (ruko, apartemen) umumnya menawarkan tingkat kapitalisasi yang lebih tinggi. Desain yang tepat guna dapat memaksimalkan potensi ini.</p>
+                    <div class="chart-container">
+                        <canvas id="capRateChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6 md:p-8">
+                    <h4 class="font-bold text-xl mb-4 text-center">Analisis Biaya Siklus Hidup (Life Cycle Cost)</h4>
+                    <p class="text-sm text-center text-slate-500 mb-4">Studi kasus pada Rukan di Manado menunjukkan bahwa biaya pemeliharaan jangka panjang adalah komponen biaya yang signifikan. Pilihan desain dan material di awal sangat memengaruhi total biaya kepemilikan.</p>
+                    <div class="chart-container">
+                        <canvas id="lccChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-12">
+                <h4 class="font-bold text-xl mb-6 text-center">Sorotan Proyek Unggulan</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="card p-6">
+                        <h5 class="font-bold text-lg">BSI Tower, Jakarta</h5>
+                        <p class="text-sm text-slate-600 mt-1 mb-3">Menara ikonik dengan investasi Rp 1,1 triliun, menggabungkan desain Islami, keberlanjutan, dan integrasi TOD untuk menjadi pusat keuangan syariah.</p>
+                        <span class="inline-block bg-teal-100 text-teal-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">Korporat</span>
+                        <span class="inline-block bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">Green Building</span>
+                    </div>
+                    <div class="card p-6">
+                        <h5 class="font-bold text-lg">Enchante Residence, BSD</h5>
+                        <p class="text-sm text-slate-600 mt-1 mb-3">Hunian mewah (mulai Rp 10 Miliar) dengan lift pribadi dan fitur *smart home*, dirancang oleh arsitek ternama untuk gaya hidup premium.</p>
+                        <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">Mewah</span>
+                        <span class="inline-block bg-purple-100 text-purple-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">Smart Home</span>
+                    </div>
+                    <div class="card p-6">
+                        <h5 class="font-bold text-lg">Samara Residence, Samarinda</h5>
+                        <p class="text-sm text-slate-600 mt-1 mb-3">Perumahan subsidi dengan konsep *Eco Living* dan desain kekinian, menunjukkan bahwa desain berkualitas kini dapat diakses di berbagai segmen pasar.</p>
+                        <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">Terjangkau</span>
+                        <span class="inline-block bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">Eco Living</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="kalkulator" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-900">Simulasikan Investasi Anda</h3>
+                <p class="mt-2 text-md md:text-lg text-slate-600 max-w-2xl mx-auto">Gunakan kalkulator sederhana ini untuk melihat estimasi bagaimana investasi dalam desain arsitektur dapat memengaruhi potensi nilai properti Anda.</p>
+            </div>
+            <div class="card max-w-2xl mx-auto p-6 md:p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="initialValue" class="block mb-2 text-sm font-medium text-gray-900">Nilai Properti Awal (Rp)</label>
+                        <input type="number" id="initialValue" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5" placeholder="Contoh: 500000000" value="1000000000">
+                    </div>
+                    <div>
+                        <label for="designLevel" class="block mb-2 text-sm font-medium text-gray-900">Tingkat Investasi Desain</label>
+                        <select id="designLevel" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5">
+                            <option value="0.05">Standar (Tanpa Arsitek)</option>
+                            <option value="0.12" selected>Profesional (Dengan Arsitek)</option>
+                            <option value="0.20">Premium (Green Building & Fitur Cerdas)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                    <p class="text-sm text-slate-500">Estimasi Potensi Nilai Akhir Properti</p>
+                    <p id="finalValue" class="text-3xl font-bold text-teal-600 mt-1">Rp 1.200.000.000</p>
+                    <p class="text-sm text-slate-500 mt-2">Peningkatan Nilai: <span id="valueIncrease" class="font-semibold">20%</span></p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-white">
+        <div class="container mx-auto py-8 px-4 sm:px-6 lg:px-8 text-center">
+            <p class="font-semibold">Desain Arsitektur adalah Investasi Cerdas</p>
+            <p class="text-sm text-slate-400 mt-1">Aplikasi ini menyajikan data dan wawasan dari laporan komprehensif untuk membantu Anda membuat keputusan properti yang lebih baik.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const capRateData = {
+                labels: ['Lahan Kosong', 'Rumah Sewa', 'Ruko & Rukan', 'Kios & Toko', 'Apartemen'],
+                data: [1.25, 4, 7.5, 7.5, 9.5] 
+            };
+            
+            const lccData = {
+                labels: ['Pemeliharaan Dinding', 'Pemeliharaan Atap', 'Biaya Konstruksi Awal', 'Lain-lain'],
+                data: [41.96, 24.31, 30, 3.73]
+            };
+
+            const calculator = {
+                initialValueInput: document.getElementById('initialValue'),
+                designLevelSelect: document.getElementById('designLevel'),
+                finalValueDisplay: document.getElementById('finalValue'),
+                valueIncreaseDisplay: document.getElementById('valueIncrease'),
+                
+                factors: {
+                    '0.05': 1.05,
+                    '0.12': 1.20,
+                    '0.20': 1.35 
+                },
+
+                update() {
+                    const initialValue = parseFloat(this.initialValueInput.value) || 0;
+                    const designFactor = this.factors[this.designLevelSelect.value];
+                    const finalValue = initialValue * designFactor;
+                    const increase = ((finalValue - initialValue) / initialValue) * 100;
+
+                    this.finalValueDisplay.textContent = `Rp ${finalValue.toLocaleString('id-ID')}`;
+                    this.valueIncreaseDisplay.textContent = `${increase.toFixed(0)}%`;
+                }
+            };
+
+            calculator.initialValueInput.addEventListener('input', () => calculator.update());
+            calculator.designLevelSelect.addEventListener('change', () => calculator.update());
+            calculator.update();
+
+            const renderCapRateChart = () => {
+                const ctx = document.getElementById('capRateChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: capRateData.labels,
+                        datasets: [{
+                            label: 'Estimasi Cap Rate (%)',
+                            data: capRateData.data,
+                            backgroundColor: '#0d9488',
+                            borderColor: '#0f766e',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        const ranges = {'Lahan Kosong': '0.5-2%', 'Rumah Sewa': '3-5%', 'Ruko & Rukan': '6-9%', 'Kios & Toko': '5-10%', 'Apartemen': '7-12%'};
+                                        label += ranges[context.label];
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Tingkat Kapitalisasi (%)' }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const renderLccChart = () => {
+                const ctx = document.getElementById('lccChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: lccData.labels,
+                        datasets: [{
+                            label: 'Distribusi Biaya (%)',
+                            data: lccData.data,
+                            backgroundColor: ['#0d9488', '#14b8a6', '#5eead4', '#99f6e4'],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            renderCapRateChart();
+            renderLccChart();
+
+            const tabs = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    const target = tab.getAttribute('data-tab');
+                    tabPanes.forEach(pane => {
+                        if (pane.id === target) {
+                            pane.classList.remove('hidden');
+                            pane.classList.add('active');
+                        } else {
+                            pane.classList.add('hidden');
+                            pane.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+            const mobileNav = document.getElementById('mobile-nav');
+
+            const activateNavLink = (id) => {
+                 navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                });
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        activateNavLink(entry.target.id);
+                        mobileNav.value = `#${entry.target.id}`;
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            sections.forEach(section => observer.observe(section));
+
+            mobileNav.addEventListener('change', (e) => {
+                window.location.href = e.target.value;
+            });
+        });
+    </script>
+</body>
+</html>
